@@ -1,18 +1,65 @@
-# Build and Release Folders
-bin-debug/
-bin-release/
-[Oo]bj/
-[Bb]in/
 
-# Other files and folders
-.settings/
+# Compiled object files
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.exe
 
-# Executables
-*.swf
-*.air
-*.ipa
-*.apk
+# Kernel and binary outputs
+*.elf
+*.bin
+*.iso
+*.img
+*.map
+*.sym
 
-# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
-# should NOT be excluded as they contain compiler settings and other important
-# information for Eclipse / Flash Builder.
+# Build directories
+build/
+dist/
+out/
+
+# Debugging files
+*.core
+core
+*.dmp
+
+# QEMU logs and temporary files
+qemu.log
+*.log
+*.pid
+*.sock
+
+# GDB history
+.gdb_history
+
+# Editor and IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Local environment files
+.env
+.env.*
+
+# Keep example environment configuration
+!.env.example
