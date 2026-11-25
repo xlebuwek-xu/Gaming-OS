@@ -63,3 +63,17 @@ temp/
 
 # Keep example environment configuration
 !.env.example
+
+# Local ISO staging directory
+/iso_root/
+
+# Downloaded Limine archive and locally built utilities
+/boot/limine/limine-binary.tar.gz
+/boot/limine/limine-binary/limine
+/boot/limine/limine-binary/limine-tool-windows-x86/
+
+# Required Gaming OS source and boot files
+!/kernel/core/
+!/kernel/core/**
+!/boot/limine/limine-binary/limine-bios-cd.bin
+!/boot/limine/limine-binary/limine-uefi-cd.bin
