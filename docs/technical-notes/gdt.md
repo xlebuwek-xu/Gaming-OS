@@ -6,15 +6,17 @@ The Global Descriptor Table (GDT) is a data structure used by x86 processors to 
 
 In x86-64 long mode, segmentation is mostly disabled or limited, but the GDT remains important for defining code and data segment descriptors and configuring the processor's segment registers.
 
-## 2. Main Components
+## 2. GDT Structure
 
-The initial Gaming OS GDT will contain three descriptors:
+The Gaming OS GDT currently contains three descriptors:
 
-| Index | Descriptor | Purpose |
-|---|---|---|
-| 0 | Null Descriptor | Required null entry |
-| 1 | Kernel Code Segment | Defines the kernel code segment |
-| 2 | Kernel Data Segment | Defines the kernel data segment |
+| Index | Descriptor | Selector | Purpose |
+|---|---|---|---|
+| 0 | Null Descriptor | 0x00 | Required null entry |
+| 1 | Kernel Code Segment | 0x08 | Defines the 64-bit kernel code segment |
+| 2 | Kernel Data Segment | 0x10 | Defines the kernel data segment |
+
+Each descriptor occupies 8 bytes, so the complete GDT occupies 24 bytes.
 
 ## 3. GDT Registers
 
@@ -23,35 +25,60 @@ The GDTR register stores:
 - Base address of the GDT.
 - Limit of the GDT (table size minus one).
 
-The `LGDT` instruction loads the GDT register with a pointer to the new table.
+The `LGDT` instruction loads GDTR with the address and limit of the new table.
 
-## 4. Initial GDT Design
+The `SGDT` instruction is used to read the current GDTR value for verification.
 
-The planned initial GDT contains:
+## 4. Implementation
 
-- Null descriptor.
-- 64-bit kernel code descriptor.
-- Kernel data descriptor.
+The GDT implementation consists of:
 
-The code and data descriptors will use a flat memory model.
+- `kernel/include/gdt.h` — GDT interface and diagnostic state structure.
+- `kernel/arch/x86_64/gdt.c` — GDT descriptors, GDTR pointer, initialization and state-reading functions.
+- `kernel/arch/x86_64/gdt_load.S` — Assembly routine that loads the GDT and reloads segment registers.
+- `kernel/core/kernel.c` — Calls GDT initialization and prints diagnostic information through the serial port.
 
-## 5. Implementation Plan
+The GDT contains:
 
-1. Define the GDT entry structure.
-2. Create the initial GDT table.
-3. Define the GDTR pointer structure.
-4. Implement the GDT loading routine.
-5. Reload the required segment registers.
-6. Verify the configuration in the QEMU environment.
+- Null descriptor: `0x0000000000000000`
+- 64-bit kernel code descriptor: `0x00AF9A000000FFFF`
+- Kernel data descriptor: `0x00CF92000000FFFF`
 
-## 6. Testing
+The code selector is `0x08`, and the data selector is `0x10`.
 
-The implementation will be tested after the kernel build and boot process are available.
+After loading GDTR, the assembly routine reloads DS, ES and SS. It also reloads CS using a far return.
 
-Testing will verify that:
+## 5. Testing
 
-- The GDT is loaded successfully.
-- The expected segment selectors are configured.
-- Kernel execution continues after GDT initialization.
+The implementation was built using the cross-compiler and tested by booting the kernel in QEMU.
 
-**Status:** Research and initial design completed. Implementation pending.
+The kernel successfully loaded the custom GDT and continued execution.
+
+### QEMU verification results
+
+| Parameter | Observed value |
+|---|---|
+| GDTR Base | `0xFFFFFFFF80002000` |
+| GDTR Limit | `0x0000000000000017` |
+| CS | `0x0000000000000008` |
+| DS | `0x0000000000000010` |
+| ES | `0x0000000000000010` |
+| SS | `0x0000000000000010` |
+
+The GDTR limit of `0x17` corresponds to a 24-byte GDT (24 - 1).
+
+The segment selectors match the expected code and data descriptor indexes.
+
+The final kernel message confirms that execution continued after GDT initialization:
+
+`Gaming OS: first boot milestone reached!`
+
+## 6. Current Limitations
+
+- The GDT currently contains only basic kernel code and data descriptors.
+- User-mode segments and privilege-level transitions are not implemented.
+- Task State Segment (TSS) support is not implemented.
+
+## 7. Status
+
+**Status: Implemented, loaded and successfully tested in QEMU.**

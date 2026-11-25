@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "limine.h"
+#include "gdt.h"
 
 __attribute__((used, section(".limine_requests_start"), aligned(8)))
 static volatile uint64_t requests_start_marker[] =
@@ -61,6 +62,17 @@ static void serial_write_string(const char *str)
     }
 }
 
+
+static void serial_write_hex(uint64_t value)
+{
+    static const char digits[] = "0123456789ABCDEF";
+
+    for (int i = 15; i >= 0; i--)
+    {
+        serial_write_char(digits[(value >> (i * 4)) & 0xF]);
+    }
+}
+
 void kernel_main(void)
 {
     serial_init();
@@ -78,6 +90,37 @@ void kernel_main(void)
     }
 
     serial_write_string("Limine base revision: supported.\n");
+    serial_write_string("GDT: loading custom GDT...\n");
+    gdt_init();
+    serial_write_string("GDT: custom GDT loaded successfully.\n");
+
+    struct gdt_state gdt_state;
+    gdt_read_state(&gdt_state);
+
+    serial_write_string("GDT: GDTR base = 0x");
+    serial_write_hex(gdt_state.base);
+    serial_write_string("\n");
+
+    serial_write_string("GDT: GDTR limit = 0x");
+    serial_write_hex(gdt_state.limit);
+    serial_write_string("\n");
+
+    serial_write_string("GDT: CS = 0x");
+    serial_write_hex(gdt_state.cs);
+    serial_write_string("\n");
+
+    serial_write_string("GDT: DS = 0x");
+    serial_write_hex(gdt_state.ds);
+    serial_write_string("\n");
+
+    serial_write_string("GDT: ES = 0x");
+    serial_write_hex(gdt_state.es);
+    serial_write_string("\n");
+
+    serial_write_string("GDT: SS = 0x");
+    serial_write_hex(gdt_state.ss);
+    serial_write_string("\n");
+
     serial_write_string("Gaming OS: first boot milestone reached!\n");
 
     for (;;)
